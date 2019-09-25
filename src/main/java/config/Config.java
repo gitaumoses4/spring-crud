@@ -9,10 +9,13 @@ import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.expression.spel.support.DataBindingPropertyAccessor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import javax.sql.DataSource;
+import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
@@ -55,6 +58,17 @@ public class Config {
     public LocalSessionFactoryBean sessionFactory() {
         LocalSessionFactoryBean sessionFactoryBean = new LocalSessionFactoryBean();
         sessionFactoryBean.setDataSource(dataSource());
+
+        sessionFactoryBean.setPackagesToScan(ENTITYMANAGER_PACKAGES_TO_SCAN);
+
+        Properties properties = new Properties();
+        properties.put("hibernate.dialect", HIBERNATE_DIALECT);
+        properties.put("hibernate.show_sql", HIBERNATE_SHOW_SQL);
+        properties.put("hibernate.hbm2ddl.auto", HIBERNATE_HBM2DDL_AUTO);
+
+        sessionFactoryBean.setHibernateProperties(properties);
+
+        return sessionFactoryBean;
     }
 
     @Bean
@@ -65,5 +79,20 @@ public class Config {
         dataSource.setUsername(DB_USERNAME);
         dataSource.setPassword(DB_PASSWORD);
         return dataSource;
+    }
+
+    @Bean
+    public HibernateTransactionManager transactionManager() {
+        HibernateTransactionManager transactionManager = new HibernateTransactionManager();
+        transactionManager.setSessionFactory(sessionFactory().getObject());
+        return transactionManager;
+    }
+
+    @Bean
+    public InternalResourceViewResolver jspViewResolver() {
+        InternalResourceViewResolver resourceViewResolver = new InternalResourceViewResolver();
+        resourceViewResolver.setPrefix("/views/");
+        resourceViewResolver.setSuffix("jsp");
+        return resourceViewResolver;
     }
 }
